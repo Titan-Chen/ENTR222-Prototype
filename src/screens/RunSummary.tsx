@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ChartColumn, ChevronLeft, Share2, Trash2, Watch } from 'lucide-react';
 import type { MetricKey } from '../data/metrics';
+import { routeById } from '../data/routes';
 import { TODAY_RUN_ID } from '../data/runs';
 import { fmtDay, fmtDistance, fmtDuration, fmtPace, fmtTime, paceUnit } from '../lib/format';
 import { insightsFor, type RunDeltas } from '../lib/insights';
@@ -10,6 +11,7 @@ import { useUi } from '../state/ui';
 import { TimeOfDayIcon, Trend } from '../components/Icons';
 import { ExplainerSheet, MetricTile } from '../components/Metric';
 import { ConfirmDialog } from '../components/Overlay';
+import { RouteMap } from '../components/RouteMap';
 import { trendProps } from '../components/RunTrends';
 import { ShareSheet } from '../components/ShareSheet';
 
@@ -52,6 +54,7 @@ export default function RunSummary() {
   }
 
   const ins = insightsFor(run, runs, units);
+  const route = routeById(run.routeId);
   const open = (metric: MetricKey, meaning?: string) => setExplain({ metric, meaning });
   const trend = (key: keyof RunDeltas) => ins.deltas && <Trend value={ins.deltas[key]} {...trendProps(key, ins.deltas[key], units)} />;
 
@@ -76,6 +79,15 @@ export default function RunSummary() {
           <Trash2 size={19} aria-hidden="true" />
         </button>
       </div>
+
+      {route && (
+        <div className="route-preview">
+          <RouteMap route={route} aspect={1.8} label={`Map of ${route.name}`} />
+          <span className="route-preview-name" aria-hidden="true">
+            {route.name}
+          </span>
+        </div>
+      )}
 
       <div className="metric-grid">
         <MetricTile metric="distance" value={fmtDistance(run.distanceMi, units)} unit={units} meaning={ins.distance} trend={trend('distance')} onExplain={open} />

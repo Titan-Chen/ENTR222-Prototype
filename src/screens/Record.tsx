@@ -8,6 +8,7 @@ import { useAppState } from '../state/AppState';
 import { useUi } from '../state/ui';
 import { MetricIcon } from '../components/Icons';
 import { BottomSheet, ConfirmDialog } from '../components/Overlay';
+import { RouteMap } from '../components/RouteMap';
 
 type Phase = 'locating' | 'ready' | 'running' | 'paused';
 
@@ -84,6 +85,7 @@ export default function Record() {
       cadence: 160 + Math.round(Math.random() * 6),
       elevationFt: Math.round(live.distanceMi * 25),
       calories: Math.round(live.distanceMi * 105),
+      routeId: route?.id,
     };
     addRun(run);
     navigate(`/runs/${run.id}`, { replace: true });
@@ -114,6 +116,15 @@ export default function Record() {
           {phase === 'ready' && <Satellite size={18} aria-hidden="true" />}
           {phase === 'paused' ? <Pause size={16} fill="currentColor" aria-hidden="true" /> : phase !== 'locating' && <span className="dot" aria-hidden="true" />}
         </span>
+      </div>
+
+      <div className="record-map">
+        <RouteMap
+          route={route}
+          progress={route ? Math.min(1, live.distanceMi / route.distanceMi) : 0}
+          aspect={1.7}
+          label={route ? `Map of ${route.name}, your position along it` : 'Map around your start'}
+        />
       </div>
 
       <div className="record-main">

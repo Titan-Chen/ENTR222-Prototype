@@ -1,3 +1,5 @@
+import { closestRoute } from './routes';
+
 export interface Run {
   id: string;
   date: Date;
@@ -9,6 +11,8 @@ export interface Run {
   cadence: number;
   elevationFt: number;
   calories: number;
+  /** Saved route the run followed, shown on its map. */
+  routeId?: string;
 }
 
 // Sample persona: a casual runner, 2–3 runs a week, slowly getting faster.
@@ -56,6 +60,7 @@ export const ALL_RUNS: Run[] = RAW.map(([daysAgo, mi, pace, hr, cadence, elev, h
     cadence,
     elevationFt: elev,
     calories: Math.round(mi * 105),
+    routeId: closestRoute(mi).id,
   };
 });
 

@@ -7,7 +7,7 @@ import { fmtDistance } from '../lib/format';
 import { suggestRun, type Effort } from '../lib/suggest';
 import { useAppState } from '../state/AppState';
 import { MetricIcon } from './Icons';
-import { RouteSketch } from './RouteSketch';
+import { RouteMap } from './RouteMap';
 
 const EFFORT: Record<Effort, { label: string; icon: ReactNode }> = {
   recovery: { label: 'Recovery', icon: <Leaf size={16} /> },
@@ -37,6 +37,11 @@ export function RunSuggestion() {
 
   return (
     <section className="card suggest" aria-label="Suggested run for today">
+      <Link to={`/record?${query}`} className="start-run" aria-label={`Start a run${route ? `, ${route.name}` : ''}, ${target}`}>
+        <Play size={26} fill="currentColor" aria-hidden="true" />
+        <span aria-hidden="true">{target}</span>
+      </Link>
+
       <div className="suggest-head">
         <span className={`effort-pill ${s.effort}`}>
           {EFFORT[s.effort].icon}
@@ -58,6 +63,15 @@ export function RunSuggestion() {
       </div>
       {showWhy && <p className="suggest-why">{s.why}</p>}
 
+      {route && (
+        <div className="route-preview">
+          <RouteMap route={route} aspect={2} label={`Map of ${route.name}, starting and finishing at home`} />
+          <span className="route-preview-name" aria-hidden="true">
+            {route.name}
+          </span>
+        </div>
+      )}
+
       <div className="route-picks" role="radiogroup" aria-label="Choose a route">
         {s.routes.map((r) => (
           <button
@@ -69,7 +83,7 @@ export function RunSuggestion() {
             onClick={() => setPicked(r.id)}
           >
             <span className="route-thumb" aria-hidden="true">
-              <RouteSketch id={r.id} stroke="currentColor" />
+              <RouteMap route={r} thumb aspect={1.7} />
             </span>
             <strong aria-hidden="true">
               {fmtDistance(r.distanceMi, units, 1)}
@@ -87,11 +101,6 @@ export function RunSuggestion() {
           <span aria-hidden="true">Any way</span>
         </button>
       </div>
-
-      <Link to={`/record?${query}`} className="start-run" aria-label={`Start a run${route ? `, ${route.name}` : ''}, ${target}`}>
-        <Play size={26} fill="currentColor" aria-hidden="true" />
-        <span aria-hidden="true">{target}</span>
-      </Link>
     </section>
   );
 }
