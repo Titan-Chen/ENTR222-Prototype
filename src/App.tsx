@@ -11,6 +11,7 @@ import RunSummary from './screens/RunSummary';
 import MoreDetails from './screens/MoreDetails';
 import Settings from './screens/Settings';
 import Onboarding from './screens/Onboarding';
+import Record from './screens/Record';
 
 export default function App() {
   return (
@@ -43,6 +44,16 @@ function Shell() {
   useEffect(() => {
     mainRef.current?.scrollTo(0, 0);
   }, [pathname]);
+
+  // Recording takes over the whole screen, like the watch does.
+  if (pathname === '/record') {
+    return (
+      <>
+        <SyncWatcher />
+        <Record />
+      </>
+    );
+  }
 
   return (
     <>

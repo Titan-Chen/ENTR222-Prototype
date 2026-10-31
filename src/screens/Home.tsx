@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Share2, Sparkles, X } from 'lucide-react';
+import { Play, Share2, Sparkles, X } from 'lucide-react';
 import type { Run } from '../data/runs';
 import { fmtDay, fmtDistance, fmtDuration, fmtPace, paceUnit } from '../lib/format';
 import { insightsFor } from '../lib/insights';
@@ -35,6 +35,10 @@ export default function Home() {
         <p className="eyebrow">{greeting()}</p>
         <h1>{GOAL_LINE[goal]}</h1>
       </header>
+
+      <Link to="/record" className="btn btn-primary btn-block start-run">
+        <Play size={20} fill="currentColor" aria-hidden="true" /> Start a run
+      </Link>
 
       <SyncBanner />
 

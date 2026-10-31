@@ -13,6 +13,10 @@ interface Persisted {
   units: Units;
   deletedIds: string[];
   slowSync: boolean;
+  /** Runs recorded in the app with "Start a run". */
+  recordedRuns: Run[];
+  /** Demo only: run the recording clock at 10x. */
+  fastRuns: boolean;
 }
 
 /** waiting → syncing → done (banner shows "ready") → idle */
@@ -27,6 +31,7 @@ interface AppState extends Persisted {
   update: (patch: Partial<Persisted>) => void;
   deleteRun: (id: string) => void;
   restoreRun: (id: string) => void;
+  addRun: (run: Run) => void;
   restartSync: () => void;
   resetAll: () => void;
 }
@@ -41,6 +46,8 @@ const DEFAULTS: Persisted = {
   units: 'mi',
   deletedIds: [],
   slowSync: false,
+  recordedRuns: [],
+  fastRuns: false,
 };
 
 const FAST_SYNC_MS = 6000;
@@ -50,7 +57,11 @@ const TICK_MS = 150;
 function load(): Persisted {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? { ...DEFAULTS, ...JSON.parse(raw) } : DEFAULTS;
+    if (!raw) return DEFAULTS;
+    const saved = { ...DEFAULTS, ...JSON.parse(raw) } as Persisted;
+    // Dates come back from JSON as strings.
+    saved.recordedRuns = saved.recordedRuns.map((r) => ({ ...r, date: new Date(r.date) }));
+    return saved;
   } catch {
     return DEFAULTS;
   }
@@ -98,8 +109,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const todaySynced = sync.status === 'done' || sync.status === 'idle';
 
   const runs = useMemo(
-    () => ALL_RUNS.filter((r) => !persisted.deletedIds.includes(r.id) && (r.id !== TODAY_RUN_ID || todaySynced)),
-    [persisted.deletedIds, todaySynced],
+    () =>
+      [...persisted.recordedRuns, ...ALL_RUNS]
+        .filter((r) => !persisted.deletedIds.includes(r.id) && (r.id !== TODAY_RUN_ID || todaySynced))
+        .sort((a, b) => b.date.getTime() - a.date.getTime()),
+    [persisted.recordedRuns, persisted.deletedIds, todaySynced],
   );
 
   const update = useCallback((patch: Partial<Persisted>) => setPersisted((p) => ({ ...p, ...patch })), []);
@@ -111,6 +125,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const restoreRun = useCallback(
     (id: string) => setPersisted((p) => ({ ...p, deletedIds: p.deletedIds.filter((d) => d !== id) })),
+    [],
+  );
+
+  const addRun = useCallback(
+    (run: Run) => setPersisted((p) => ({ ...p, recordedRuns: [run, ...p.recordedRuns] })),
     [],
   );
 
@@ -130,6 +149,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     update,
     deleteRun,
     restoreRun,
+    addRun,
     restartSync,
     resetAll,
   };

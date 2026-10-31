@@ -35,7 +35,7 @@ const RAW: [number, number, number, number, number, number, number][] = [
   [47, 2.3, 665, 161, 154, 28, 8],
 ];
 
-function titleFor(hour: number): string {
+export function titleFor(hour: number): string {
   if (hour < 12) return 'Morning run';
   if (hour < 17) return 'Afternoon run';
   return 'Evening run';

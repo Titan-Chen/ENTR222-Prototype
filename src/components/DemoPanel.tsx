@@ -9,7 +9,7 @@ const enabled = /[?&#]demo\b/.test(window.location.search + window.location.hash
 /** Facilitator controls for usability sessions. Open the app with ?demo to show them. */
 export function DemoPanel() {
   const [open, setOpen] = useState(false);
-  const { slowSync, deletedIds, update, restartSync, resetAll } = useAppState();
+  const { slowSync, fastRuns, deletedIds, update, restartSync, resetAll } = useAppState();
   const { toast } = useUi();
   const navigate = useNavigate();
 
@@ -34,6 +34,9 @@ export function DemoPanel() {
             </button>
             <button className="btn btn-secondary" onClick={run(slowSync ? 'Fast sync (6 s)' : 'Slow sync (15 s)', () => update({ slowSync: !slowSync }))}>
               Sync speed: {slowSync ? 'slow (15 s)' : 'fast (6 s)'}
+            </button>
+            <button className="btn btn-secondary" onClick={run(fastRuns ? 'Runs record in real time' : 'Runs record at 10×', () => update({ fastRuns: !fastRuns }))}>
+              Run recording speed: {fastRuns ? '10×' : 'real time'}
             </button>
             <button
               className="btn btn-secondary"

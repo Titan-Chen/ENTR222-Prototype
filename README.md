@@ -26,6 +26,7 @@ Open the app with `?demo` (for example `http://localhost:5173/?demo`). A small y
 
 - **Re-run today's sync:** replays the "run coming from your watch" moment
 - **Sync speed:** 6 s (default) or 15 s, to test whether people wait or wander off
+- **Run recording speed:** real time (default) or 10×, so a "run" covers some distance during a short session
 - **Restore deleted runs**
 - **Reset everything (new tester):** back to onboarding with default settings
 
@@ -35,6 +36,7 @@ Everything is saved in the browser, so reset between testers.
 
 | Real product | Prototype |
 |---|---|
+| Recording a run on the watch (2.2–2.5) | "Start a run" on Home: GPS check, live time/distance/pace/heart rate, pause/resume (paused time not counted), then finish and save or discard. The saved run opens its summary |
 | Watch → app sync | A timed progress banner. Today's run appears when it finishes |
 | Push notification (2.11) | An in-app banner styled like a phone notification. It appears if the tester has left Home when sync finishes |
 | Share to apps (2.8) | A real PNG of the run card sent to the system share sheet. Where the browser can't share files, it downloads the image |
@@ -44,6 +46,7 @@ Everything is saved in the browser, so reset between testers.
 
 | Task | Path | Taps | Target |
 |---|---|---|---|
+| Start a run | Home → Start a run → Start | 2 | n/a |
 | Review last run | Home → See summary | 1 | ≤3 |
 | Share a run from Home | Share → Share image → pick app | 3 | ≤3 |
 | Share from run summary | Share → Share image → pick app | 3 | ≤3 (1.6) |
@@ -73,6 +76,6 @@ src/
   lib/insights.ts      one-line meanings ("16 sec per mile faster than your last 3 runs")
   state/AppState.tsx   settings, simulated sync, deleted runs (saved to localStorage)
   state/ui.tsx         toasts and simulated notifications
-  screens/             Onboarding, Home, Runs, RunSummary, MoreDetails, Settings
+  screens/             Onboarding, Home, Record, Runs, RunSummary, MoreDetails, Settings
   components/          sheets, metric tiles, share card, sync banner, demo panel
 ```

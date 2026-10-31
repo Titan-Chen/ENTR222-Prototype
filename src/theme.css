@@ -381,6 +381,52 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .onboarding .subtle { margin-bottom: 22px; }
 .onboarding-foot { margin-top: auto; padding-top: 20px; }
 
+/* ---------- Start a run / recording ---------- */
+
+.start-run { min-height: 56px; font-size: 17px; }
+
+.record {
+  flex: 1; display: flex; flex-direction: column;
+  padding: 20px 20px calc(28px + env(safe-area-inset-bottom));
+  padding-top: max(20px, env(safe-area-inset-top));
+}
+.record-top { display: flex; align-items: center; justify-content: space-between; min-height: 44px; }
+.record-status {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 12px; border-radius: 999px;
+  background: var(--surface-2); font-size: 14px; font-weight: 650; color: var(--text-2);
+}
+.record-status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-3); }
+.record-ready .record-status .dot { background: var(--good); }
+.record-running .record-status { color: var(--good); }
+.record-running .record-status .dot { background: var(--good); animation: blink 1.2s ease-in-out infinite; }
+.record-paused .record-status { color: #fbbf24; }
+.record-paused .record-status .dot { background: #fbbf24; }
+.pulse { animation: blink 1s ease-in-out infinite; color: var(--accent); }
+
+.record-main { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 28px; }
+.record-time, .record-grid div { display: flex; flex-direction: column; align-items: center; }
+.record-time span, .record-grid span { font-size: 14px; font-weight: 600; color: var(--text-2); }
+.record-time strong { font-size: 72px; font-weight: 750; line-height: 1.05; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.record-paused .record-time strong { color: var(--text-2); }
+.record-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.record-grid strong { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.record-grid small { font-size: 13px; font-weight: 600; color: var(--text-2); margin-left: 2px; }
+
+.record-controls { display: flex; justify-content: center; align-items: center; min-height: 140px; text-align: center; }
+.record-pair { display: flex; gap: 28px; }
+.record-btn {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  width: 120px; height: 120px; border-radius: 50%;
+  font-weight: 700; font-size: 15px; color: #fff;
+}
+.record-btn.small { width: 96px; height: 96px; font-size: 14px; }
+.record-btn.start { background: #15803d; }
+.record-btn.pause { background: #a16207; }
+.record-btn.finish { background: #b42318; }
+
+@keyframes blink { 50% { opacity: 0.35; } }
+
 /* ---------- More details placeholder ---------- */
 
 .locked-list { list-style: none; margin: 12px 0 0; padding: 0; }

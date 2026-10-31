@@ -54,12 +54,13 @@ Every requirement in Section 4 falls into one of three groups:
 - **Later:** worth building after the MVP (P3–P6).
 - **Won't build:** not built by this project, either because Garmin's watch already does it or because there is too little evidence it is needed.
 
-The MVP follows Release 1 of the user story map (4.0): everything a casual user needs to review and share a run in the app, plus the casual-first interface rules.
+The MVP follows Release 1 of the user story map (4.0): everything a casual user needs to start, review and share a run in the app, plus the casual-first interface rules. Starting and recording a run (2.2–2.5) is included as an in-app "Start a run" flow so the prototype can be tested end to end; on the real product this mirrors what the watch already does.
 
 #### MVP (P7–P10)
 
 | Area | Requirements |
 |---|---|
+| Start & record a run | 2.2 "Start a run" button with GPS check · 2.3 live pace, distance, time, heart rate · 2.4 pause / resume · 2.5 finish and save (or discard), then open the run summary |
 | Finish, save & sync | 1.2 instant data with sync status · 2.11 "summary ready" notification |
 | Review the run | 1.3 summary leads with core metrics · 1.5 past runs list · 2.7 run history details |
 | Share | 1.6 share in ≤3 taps · 2.8 share run summary |
@@ -84,15 +85,11 @@ The MVP follows Release 1 of the user story map (4.0): everything a casual user 
 
 **A. Existing Garmin watch capabilities (dependencies, not built)**
 
-This project redesigns the Garmin Connect app. These story map Release 1 tasks are still part of the user's journey, but they already work on Garmin watches, so the MVP relies on them rather than building them (see Section 5).
+This project redesigns the Garmin Connect app. These story map Release 1 tasks are still part of the user's journey, but they already work on Garmin watches, so the MVP relies on them rather than building them (see Section 5). Starting and recording a run (2.2–2.5) moved to the MVP as an in-app flow.
 
 | Req | Function | Why we don't build it |
 |---|---|---|
 | 2.1 | Battery warning before a run | Existing watch behavior; outside the app's scope |
-| 2.2 | Start a run with GPS check | Existing watch behavior |
-| 2.3 | Live pace, distance, time, heart rate | Existing watch behavior |
-| 2.4 | Pause / resume recording | Existing watch behavior |
-| 2.5 | End and save a run on the watch | Existing watch behavior; the app's run summary (1.3) is in the MVP |
 | 2.6 | Background sync from watch to app | The sync already exists; the MVP redesigns how sync status is shown (1.2, 3.8), not the sync itself |
 | 4.14 | Turn-by-turn route navigation | Watch-side feature; routes are not in the MVP |
 
@@ -162,14 +159,14 @@ The story map follows the run journey from left to right. Release 1 covers the c
 |---|---|---|---|
 | Decide to run | App | — | View suggested distance; check weekly activity; view sleep score, stress level, recovery time |
 | Get ready | Watch + App | Check watch battery | Air quality / heat risk alert; check weather |
-| Start the run | Watch | Activate run activity; check GPS connection; start recording | — |
+| Start the run | Watch + App | Activate run activity; check GPS connection; start recording | — |
 | Keep track while running | Watch | View pace; view distance; view elapsed time; view heart rate | High heart rate alerts; fast pace alerts; return-before-dark alerts; distance milestone alerts |
 | Take a water break (optional) | Watch | Pause recording; resume recording | Optional hydration reminders |
 | Finish and save | Watch → App | End run; save activity; view run summary; sync activity to app | — |
 | Review the run | App | View past runs | Rate run difficulty; record post-run mood; edit saved activity; compare recent performance |
 | Share with friends | App | Share run summary | View friends' runs; challenge a friend (friend relay); organize a club run |
 
-**Priority convention:** The MVP is Release 1 plus the cross-cutting interface requirements that shape how Release 1 screens are built (simple first layer, plain language, clear feedback). MVP requirements are rated P7–P10. Release 1 watch tasks (2.1–2.6) keep their high priority because the journey depends on them, but they are existing Garmin capabilities and are not built by this project. Release 2 tasks and features not on the story map are rated P3–P6. See 2.2 Scope for the full MVP / Later / Won't build lists.
+**Priority convention:** The MVP is Release 1 plus the cross-cutting interface requirements that shape how Release 1 screens are built (simple first layer, plain language, clear feedback). MVP requirements are rated P7–P10. Release 1 watch tasks keep their high priority because the journey depends on them. Starting and recording a run (2.2–2.5) is built as an in-app flow in the MVP; the battery warning (2.1) and background sync (2.6) remain existing Garmin capabilities that this project does not build. Release 2 tasks and features not on the story map are rated P3–P6. See 2.2 Scope for the full MVP / Later / Won't build lists.
 
 ### 4.1 Product Design
 *App interface requirements derived from the story map and the interview findings in Section 1 (navigation, data comprehension, timing of guidance).*
@@ -200,10 +197,10 @@ The story map follows the run journey from left to right. Release 1 covers the c
 | ID | Requirement | Priority | Acceptance criteria / how verified |
 |---|---|---|---|
 | 2.1 | The watch shall show its battery level and warn the user before starting a run if the battery is too low to record it. | (P8) | Warning appears below a set threshold (e.g. 10%) |
-| 2.2 | The user shall be able to start a run activity from the watch, which confirms GPS connection before recording begins. | (P10) | GPS status shown; recording starts in one action once GPS is ready |
-| 2.3 | During a run, the watch shall display live pace, distance, elapsed time, and heart rate. | (P10) | All four metrics visible and updating during a test run |
+| 2.2 | The user shall be able to start a run activity from the watch or from a clearly labeled "Start a run" button on the app's home screen, which confirms GPS connection before recording begins. | (P10) | GPS status shown; recording starts in one action once GPS is ready |
+| 2.3 | During a run, the watch and the app's recording screen shall display live pace, distance, elapsed time, and heart rate. | (P10) | All four metrics visible and updating during a test run |
 | 2.4 | The user shall be able to pause and resume recording, with paused time excluded from moving time. | (P9) | Paused segment not counted in moving time on the summary |
-| 2.5 | The user shall be able to end and save a run, then see a run summary on the watch. | (P10) | Saved activity appears in history with summary |
+| 2.5 | The user shall be able to end and save (or discard) a run, then see its run summary. | (P10) | Saved activity appears in history with summary; discarding asks for confirmation |
 | 2.6 | Saved activities shall sync automatically from the watch to the app in the background. | (P10) | Activity appears in app without user action when phone is nearby |
 | 2.7 | The app shall store all past runs and let the user open any run's full details. | (P9) | All synced runs accessible from history |
 | 2.8 | The user shall be able to share a run summary as an image or link to messaging and social apps. | (P8) | Share sheet opens with summary image; tested on iOS and Android |
@@ -302,7 +299,7 @@ The story map follows the run journey from left to right. Release 1 covers the c
 | Type | Description | Impact | Mitigation |
 |---|---|---|---|
 | Assumption | [e.g. Users already own a smartphone] | [ ] | [ ] |
-| Dependency | Existing Garmin watch features for recording a run: battery warning, GPS start, live metrics, pause / resume, save (2.1–2.5) | The MVP's review and share screens need recorded runs | Use existing watch behavior; prototype with sample run data |
+| Dependency | Existing Garmin watch battery warning (2.1); the app's run recording (2.2–2.5) relies on phone GPS and a paired heart-rate source | Recorded runs feed the MVP's review and share screens | Prototype simulates recording and uses sample run data |
 | Dependency | Existing watch-to-app sync (2.6) | Run data must reach the app before the redesigned screens can show it | Design for sync delays with clear status (1.2, 3.8) |
 | Risk | [e.g. Cost exceeds target] | [High/Med/Low] | [ ] |
 
