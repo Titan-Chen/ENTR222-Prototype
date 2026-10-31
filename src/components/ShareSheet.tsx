@@ -51,12 +51,26 @@ const ShareCard = forwardRef<HTMLDivElement, CardProps>(function ShareCard({ run
   );
 });
 
+interface ShareProps {
+  run: Run;
+  insight: string;
+  onClose: () => void;
+}
+
+export function ShareSheet(props: ShareProps) {
+  return (
+    <BottomSheet title="Share your run" onClose={props.onClose}>
+      <SharePanel {...props} />
+    </BottomSheet>
+  );
+}
+
 /**
- * Share a run as an image (PRD 1.6, 2.8). From the summary: Share → Share image →
- * pick an app = 3 taps. Heart rate is off by default, matching the PRD's privacy
- * stance on health data (4.3).
+ * Share a run as an image (PRD 1.6, 2.8): Share → Share image → pick an app = 3 taps.
+ * Heart rate is off by default, matching the PRD's privacy stance on health data (4.3).
+ * Used in a sheet on the run summary and inline on the Home card.
  */
-export function ShareSheet({ run, insight, onClose }: { run: Run; insight: string; onClose: () => void }) {
+export function SharePanel({ run, insight, onClose }: ShareProps) {
   const { units } = useAppState();
   const { toast } = useUi();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -101,7 +115,7 @@ export function ShareSheet({ run, insight, onClose }: { run: Run; insight: strin
   };
 
   return (
-    <BottomSheet title="Share your run" onClose={onClose}>
+    <>
       <ShareCard ref={cardRef} run={run} insight={insight} units={units} showHeartRate={showHeartRate} />
 
       <div className="setting-row" style={{ padding: '12px 0' }}>
@@ -126,6 +140,6 @@ export function ShareSheet({ run, insight, onClose }: { run: Run; insight: strin
           <Link2 size={18} aria-hidden="true" /> Copy link
         </button>
       </div>
-    </BottomSheet>
+    </>
   );
 }

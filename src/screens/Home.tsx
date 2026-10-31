@@ -1,13 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Share2, Sparkles } from 'lucide-react';
+import { Share2, Sparkles, X } from 'lucide-react';
 import type { Run } from '../data/runs';
 import { fmtDay, fmtDistance, fmtDuration, fmtPace, paceUnit } from '../lib/format';
 import { insightsFor } from '../lib/insights';
 import { useAppState, type Goal } from '../state/AppState';
 import { RunRow } from '../components/RunRow';
 import { SyncBanner } from '../components/SyncBanner';
-import { ShareSheet } from '../components/ShareSheet';
+import { SharePanel } from '../components/ShareSheet';
 
 const GOAL_LINE: Record<Goal, string> = {
   fitter: 'Let’s keep you moving',
@@ -60,7 +60,13 @@ export default function Home() {
 function LatestRunCard({ run }: { run: Run }) {
   const { runs, units, todaySynced } = useAppState();
   const [sharing, setSharing] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
   const ins = insightsFor(run, runs, units);
+
+  // Bring the newly opened share area into view; Recent runs moves down below it.
+  useEffect(() => {
+    if (sharing) panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [sharing]);
   const label = todaySynced ? 'Your latest run' : 'Last synced run';
 
   return (
@@ -95,11 +101,28 @@ function LatestRunCard({ run }: { run: Run }) {
         <Link to={`/runs/${run.id}`} className="btn btn-secondary btn-grow above">
           See summary
         </Link>
-        <button className="btn btn-primary btn-grow above" onClick={() => setSharing(true)}>
-          <Share2 size={18} aria-hidden="true" /> Share
+        <button
+          className={`btn btn-grow above ${sharing ? 'btn-secondary' : 'btn-primary'}`}
+          onClick={() => setSharing((s) => !s)}
+          aria-expanded={sharing}
+          aria-controls="home-share-panel"
+        >
+          {sharing ? (
+            <>
+              <X size={18} aria-hidden="true" /> Close
+            </>
+          ) : (
+            <>
+              <Share2 size={18} aria-hidden="true" /> Share
+            </>
+          )}
         </button>
       </div>
-      {sharing && <ShareSheet run={run} insight={ins.headline} onClose={() => setSharing(false)} />}
+      {sharing && (
+        <div ref={panelRef} id="home-share-panel" className="inline-share above" role="region" aria-label="Share your run">
+          <SharePanel run={run} insight={ins.headline} onClose={() => setSharing(false)} />
+        </div>
+      )}
     </article>
   );
 }

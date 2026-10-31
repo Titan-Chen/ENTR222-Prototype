@@ -148,6 +148,14 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 
 .card-actions { display: flex; gap: 10px; margin-top: 14px; }
 
+/* Share options opened in place inside the Home card. */
+.inline-share {
+  margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);
+  scroll-margin-bottom: 32px;
+  animation: expand-down 0.25s ease-out;
+}
+@keyframes expand-down { from { opacity: 0; transform: translateY(-8px); } }
+
 /* ---------- Buttons ---------- */
 
 .btn {
