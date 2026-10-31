@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Flag, Pause, Play, Satellite, X } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Check, CircleCheck, Flag, Pause, Play, Satellite, Target, Trash2, X } from 'lucide-react';
+import { routeById } from '../data/routes';
 import { titleFor, type Run } from '../data/runs';
 import { fmtDistance, fmtDuration, fmtPace, paceUnit } from '../lib/format';
 import { useAppState } from '../state/AppState';
 import { useUi } from '../state/ui';
+import { MetricIcon } from '../components/Icons';
 import { BottomSheet, ConfirmDialog } from '../components/Overlay';
 
 type Phase = 'locating' | 'ready' | 'running' | 'paused';
@@ -34,6 +36,11 @@ export default function Record() {
   const [finishing, setFinishing] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const startedAt = useRef<Date | null>(null);
+  // Route and target distance chosen from the suggestion card on Home.
+  const [params] = useSearchParams();
+  const route = routeById(params.get('route'));
+  const targetMi = Number(params.get('target')) || route?.distanceMi || 0;
+  const reached = targetMi > 0 && live.distanceMi >= targetMi;
 
   useEffect(() => {
     if (phase !== 'locating') return;
@@ -69,7 +76,7 @@ export default function Record() {
     const run: Run = {
       id: `rec-${date.getTime()}`,
       date,
-      title: titleFor(date.getHours()),
+      title: route?.name ?? titleFor(date.getHours()),
       distanceMi: Math.round(live.distanceMi * 100) / 100,
       durationSec: live.movingSec,
       paceSecPerMi: Math.round(live.movingSec / live.distanceMi),
@@ -96,92 +103,120 @@ export default function Record() {
     <div className={`record record-${phase}`}>
       <div className="record-top">
         {phase === 'locating' || phase === 'ready' ? (
-          <button className="back-btn" style={{ margin: 0 }} onClick={() => navigate(-1)}>
-            <X size={20} aria-hidden="true" /> Cancel
+          <button className="icon-btn back-icon" onClick={() => navigate(-1)} aria-label="Cancel">
+            <X size={26} aria-hidden="true" />
           </button>
         ) : (
           <span />
         )}
-        <span className="record-status" role="status" aria-live="polite">
-          {phase === 'locating' ? <Satellite size={16} className="pulse" aria-hidden="true" /> : <span className="dot" aria-hidden="true" />}
-          {status}
+        <span className="record-status" role="status" aria-live="polite" aria-label={status} title={status}>
+          {phase === 'locating' && <Satellite size={18} className="pulse" aria-hidden="true" />}
+          {phase === 'ready' && <Satellite size={18} aria-hidden="true" />}
+          {phase === 'paused' ? <Pause size={16} fill="currentColor" aria-hidden="true" /> : phase !== 'locating' && <span className="dot" aria-hidden="true" />}
         </span>
       </div>
 
       <div className="record-main">
         <div className="record-time">
-          <span>Time</span>
-          <strong>{fmtDuration(live.movingSec)}</strong>
+          <MetricIcon metric="time" size={22} />
+          <strong aria-label={`Time ${fmtDuration(live.movingSec)}`}>{fmtDuration(live.movingSec)}</strong>
         </div>
         <div className="record-grid">
           <div>
-            <span>Distance</span>
+            <MetricIcon metric="distance" size={20} />
             <strong>
               {fmtDistance(live.distanceMi, units)}
               <small>{units}</small>
             </strong>
           </div>
           <div>
-            <span>Pace</span>
+            <MetricIcon metric="pace" size={20} />
             <strong>
               {live.currentPace ? fmtPace(live.currentPace, units) : '--:--'}
               <small>{paceUnit(units)}</small>
             </strong>
           </div>
           <div>
-            <span>Heart rate</span>
+            <MetricIcon metric="heartRate" size={20} />
             <strong>
               {phase === 'running' || phase === 'paused' ? live.hr : '--'}
               <small>bpm</small>
             </strong>
           </div>
         </div>
+        {targetMi > 0 && (
+          <div
+            className={`record-target${reached ? ' reached' : ''}`}
+            role="progressbar"
+            aria-label={`${route ? route.name + ', ' : ''}target ${fmtDistance(targetMi, units, 1)} ${units}`}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(Math.min(1, live.distanceMi / targetMi) * 100)}
+          >
+            <div className="record-target-top" aria-hidden="true">
+              <span className="icon-stat">
+                {route ? <MetricIcon metric="distance" size={16} /> : <Target size={16} />}
+                {route?.name ?? fmtDistance(targetMi, units, 1) + ' ' + units}
+              </span>
+              <span className="icon-stat">
+                {reached ? <CircleCheck size={16} /> : <Target size={16} />}
+                {fmtDistance(targetMi, units, 1)} {units}
+              </span>
+            </div>
+            <div className="progress" aria-hidden="true">
+              <div style={{ width: `${Math.min(100, (live.distanceMi / targetMi) * 100)}%` }} />
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="record-controls">
-        {phase === 'locating' && <p className="subtle">Stay still for a moment so your location can be found.</p>}
         {phase === 'ready' && (
           <button className="record-btn start" onClick={start} aria-label="Start run">
             <Play size={40} fill="currentColor" aria-hidden="true" />
-            <span>Start</span>
           </button>
         )}
         {phase === 'running' && (
           <button className="record-btn pause" onClick={() => setPhase('paused')} aria-label="Pause run">
             <Pause size={40} fill="currentColor" aria-hidden="true" />
-            <span>Pause</span>
           </button>
         )}
         {phase === 'paused' && (
           <div className="record-pair">
             <button className="record-btn start small" onClick={() => setPhase('running')} aria-label="Resume run">
               <Play size={30} fill="currentColor" aria-hidden="true" />
-              <span>Resume</span>
-            </button>
+              </button>
             <button className="record-btn finish small" onClick={() => setFinishing(true)} aria-label="Finish run">
               <Flag size={30} aria-hidden="true" />
-              <span>Finish</span>
-            </button>
+              </button>
           </div>
         )}
       </div>
 
       {finishing && (
-        <BottomSheet title="Finish your run?" onClose={() => setFinishing(false)}>
-          <p className="subtle" style={{ marginBottom: 16 }}>
-            {canSave
-              ? `${fmtDistance(live.distanceMi, units)} ${units} in ${fmtDuration(live.movingSec)}. Save it to see your summary.`
-              : 'This run is too short to save. Keep going a little longer, or discard it.'}
-          </p>
-          <div className="stack" style={{ gap: 10 }}>
-            <button className="btn btn-primary btn-block" onClick={save} disabled={!canSave}>
-              Save run
+        <BottomSheet title="Finish" onClose={() => setFinishing(false)}>
+          <div className="stat-row finish-stats" aria-label={`${fmtDistance(live.distanceMi, units)} ${units} in ${fmtDuration(live.movingSec)}`}>
+            <span className="icon-stat" aria-hidden="true">
+              <MetricIcon metric="distance" size={20} />
+              <strong>
+                {fmtDistance(live.distanceMi, units)} {units}
+              </strong>
+            </span>
+            <span className="icon-stat" aria-hidden="true">
+              <MetricIcon metric="time" size={20} />
+              <strong>{fmtDuration(live.movingSec)}</strong>
+            </span>
+          </div>
+          {!canSave && <p className="sr-only">Too short to save.</p>}
+          <div className="icon-actions">
+            <button className="round-btn big danger" onClick={() => setConfirmDiscard(true)} aria-label="Discard run">
+              <Trash2 size={24} aria-hidden="true" />
             </button>
-            <button className="btn btn-secondary btn-block" onClick={() => setFinishing(false)}>
-              Keep going
+            <button className="round-btn big" onClick={() => setFinishing(false)} aria-label="Keep going">
+              <Play size={24} fill="currentColor" aria-hidden="true" />
             </button>
-            <button className="link-danger" onClick={() => setConfirmDiscard(true)}>
-              Discard run
+            <button className="round-btn big good" onClick={save} disabled={!canSave} aria-label={canSave ? 'Save run' : 'Too short to save'}>
+              <Check size={26} aria-hidden="true" />
             </button>
           </div>
         </BottomSheet>
@@ -189,7 +224,7 @@ export default function Record() {
       {confirmDiscard && (
         <ConfirmDialog
           title="Discard this run?"
-          message="It won't be saved to your history."
+          message="It won't be saved."
           confirmLabel="Discard"
           onConfirm={discard}
           onCancel={() => setConfirmDiscard(false)}

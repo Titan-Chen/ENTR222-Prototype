@@ -1,10 +1,11 @@
 import { forwardRef, useRef, useState } from 'react';
 import { toPng } from 'html-to-image';
-import { Link2, Share2 } from 'lucide-react';
+import { Eye, EyeOff, Link2, Loader2, Share2 } from 'lucide-react';
 import type { Run } from '../data/runs';
 import { fmtDay, fmtDistance, fmtDuration, fmtPace, paceUnit, type Units } from '../lib/format';
 import { useAppState } from '../state/AppState';
 import { useUi } from '../state/ui';
+import { MetricIcon } from './Icons';
 import { BottomSheet } from './Overlay';
 import { RouteSketch } from './RouteSketch';
 
@@ -29,11 +30,11 @@ const ShareCard = forwardRef<HTMLDivElement, CardProps>(function ShareCard({ run
       </div>
       <div className="share-card-stats">
         <div>
-          <span>Time</span>
+          <MetricIcon metric="time" size={16} />
           <strong>{fmtDuration(run.durationSec)}</strong>
         </div>
         <div>
-          <span>Pace</span>
+          <MetricIcon metric="pace" size={16} />
           <strong>
             {fmtPace(run.paceSecPerMi, units)}
             {paceUnit(units)}
@@ -41,7 +42,7 @@ const ShareCard = forwardRef<HTMLDivElement, CardProps>(function ShareCard({ run
         </div>
         {showHeartRate && (
           <div>
-            <span>Heart rate</span>
+            <MetricIcon metric="heartRate" size={16} />
             <strong>{run.avgHr} bpm</strong>
           </div>
         )}
@@ -59,7 +60,7 @@ interface ShareProps {
 
 export function ShareSheet(props: ShareProps) {
   return (
-    <BottomSheet title="Share your run" onClose={props.onClose}>
+    <BottomSheet title="Share" onClose={props.onClose}>
       <SharePanel {...props} />
     </BottomSheet>
   );
@@ -86,18 +87,18 @@ export function SharePanel({ run, insight, onClose }: ShareProps) {
       const file = new File([blob], `run-${run.date.toISOString().slice(0, 10)}.png`, { type: 'image/png' });
       if (navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file], title: run.title });
-        toast('Run shared');
+        toast('Shared');
       } else {
         const a = document.createElement('a');
         a.href = dataUrl;
         a.download = file.name;
         a.click();
-        toast('Image saved. Share it from your photos or downloads');
+        toast('Image saved');
       }
       onClose();
     } catch (e) {
       // The user closed the system share sheet without picking an app.
-      if ((e as Error).name !== 'AbortError') toast('Couldn’t create the image. Please try again');
+      if ((e as Error).name !== 'AbortError') toast('Couldn’t create image');
     } finally {
       setBusy(false);
     }
@@ -107,10 +108,10 @@ export function SharePanel({ run, insight, onClose }: ShareProps) {
     const url = `${location.origin}${location.pathname}#/runs/${run.id}`;
     try {
       await navigator.clipboard.writeText(url);
-      toast('Link copied');
+      toast('Copied');
       onClose();
     } catch {
-      toast('Couldn’t copy the link');
+      toast('Couldn’t copy');
     }
   };
 
@@ -119,9 +120,9 @@ export function SharePanel({ run, insight, onClose }: ShareProps) {
       <ShareCard ref={cardRef} run={run} insight={insight} units={units} showHeartRate={showHeartRate} />
 
       <div className="setting-row" style={{ padding: '12px 0' }}>
-        <div className="grow">
-          Include heart rate
-          <span>Health data stays private unless you add it.</span>
+        <div className="grow icon-stat" aria-hidden="true">
+          <MetricIcon metric="heartRate" size={20} />
+          {showHeartRate ? <Eye size={18} /> : <EyeOff size={18} />}
         </div>
         <button
           className="switch"
@@ -132,12 +133,12 @@ export function SharePanel({ run, insight, onClose }: ShareProps) {
         />
       </div>
 
-      <div className="stack" style={{ gap: 10 }}>
-        <button className="btn btn-primary btn-block" onClick={shareImage} disabled={busy}>
-          <Share2 size={18} aria-hidden="true" /> {busy ? 'Preparing image…' : 'Share image'}
+      <div className="icon-actions">
+        <button className="round-btn big primary" onClick={shareImage} disabled={busy} aria-label={busy ? 'Preparing image' : 'Share image'}>
+          {busy ? <Loader2 size={24} className="spin" aria-hidden="true" /> : <Share2 size={24} aria-hidden="true" />}
         </button>
-        <button className="btn btn-secondary btn-block" onClick={copyLink}>
-          <Link2 size={18} aria-hidden="true" /> Copy link
+        <button className="round-btn big" onClick={copyLink} aria-label="Copy link">
+          <Link2 size={24} aria-hidden="true" />
         </button>
       </div>
     </>

@@ -1,7 +1,20 @@
 import type { Run } from '../data/runs';
 import { daysBetween, paceInUnits, toUnits, type Units } from './format';
 
+/** Changes vs. the previous 3 runs, for arrow indicators. Null when there isn't enough history. */
+export interface RunDeltas {
+  /** Seconds per unit; positive means faster. */
+  pace: number;
+  /** In the chosen units; positive means farther. */
+  distance: number;
+  /** Minutes; positive means longer. */
+  time: number;
+  /** Beats per minute; positive means higher. */
+  heartRate: number;
+}
+
 export interface RunInsights {
+  deltas: RunDeltas | null;
   headline: string;
   pace: string;
   distance: string;
@@ -23,6 +36,7 @@ export function insightsFor(run: Run, runs: Run[], units: Units): RunInsights {
   if (prev.length < 3) {
     const keepGoing = 'Keep running to see how this compares';
     return {
+      deltas: null,
       headline: 'Nice work getting out there. A few more runs and we’ll show how you’re improving.',
       pace: keepGoing,
       distance: keepGoing,
@@ -79,5 +93,18 @@ export function insightsFor(run: Run, runs: Run[], units: Units): RunInsights {
     headline = `A steady run. That’s ${plural(runsThisMonth, 'run')} in the last 30 days.`;
   }
 
-  return { headline, pace, distance, time, heartRate };
+  return {
+    // Same thresholds as the sentences above, so arrows and words agree.
+    deltas: {
+      pace: Math.abs(paceDiff) >= 5 ? paceDiff : 0,
+      distance: Math.abs(distDiff) > 0.3 ? Math.round(distDiff * 10) / 10 : 0,
+      time: Math.abs(minDiff) >= 2 ? minDiff : 0,
+      heartRate: Math.abs(hrDiff) >= 3 ? hrDiff : 0,
+    },
+    headline,
+    pace,
+    distance,
+    time,
+    heartRate,
+  };
 }

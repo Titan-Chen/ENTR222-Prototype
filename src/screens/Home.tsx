@@ -1,67 +1,46 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, Play, Share2, Sparkles, X } from 'lucide-react';
-import { dailyMeanings, dailyStats } from '../lib/daily';
+import { ArrowRight, History, Share2, X } from 'lucide-react';
 import type { Run } from '../data/runs';
 import { fmtDay, fmtDistance, fmtDuration, fmtPace, paceUnit } from '../lib/format';
 import { insightsFor } from '../lib/insights';
-import { useAppState, type Goal } from '../state/AppState';
+import { useAppState } from '../state/AppState';
+import { MetricIcon, TimeOfDayIcon } from '../components/Icons';
 import { RunRow } from '../components/RunRow';
+import { RunSuggestion } from '../components/RunSuggestion';
+import { RunTrends } from '../components/RunTrends';
 import { SyncBanner } from '../components/SyncBanner';
 import { SharePanel } from '../components/ShareSheet';
 import { TodayStats } from '../components/TodayStats';
 
-const GOAL_LINE: Record<Goal, string> = {
-  fitter: 'Let’s keep you moving',
-  '5k': 'On the road to your 5K',
-  consistent: 'Keep the streak going',
-  track: 'Here’s how your running is going',
-};
-
-function greeting(): string {
-  const h = new Date().getHours();
-  if (h < 12) return 'Good morning';
-  if (h < 18) return 'Good afternoon';
-  return 'Good evening';
-}
-
-/** Home: at most four items (PRD 3.2); review and share are one tap away (PRD 1.1, 3.5). */
+/**
+ * Home, communicated mainly with signs: today's numbers, one big start button,
+ * the latest run, recent runs. Names live in accessible labels and explainers.
+ */
 export default function Home() {
-  const { runs, goal } = useAppState();
+  const { runs } = useAppState();
   const latest = runs[0];
   const recent = runs.slice(1, 4);
-  // Guidance right where the decision to run is made (PRD 3.9).
-  const energyMeaning = dailyMeanings(dailyStats(runs)).bodyBattery;
 
   return (
     <div className="stack">
-      <header className="page-header">
-        <p className="eyebrow">{greeting()}</p>
-        <h1>{GOAL_LINE[goal]}</h1>
-      </header>
+      <h1 className="sr-only">Home</h1>
 
       <TodayStats />
 
-      <Link to="/record" className="start-run">
-        <span className="start-run-badge" aria-hidden="true">
-          <Play size={24} fill="currentColor" />
-        </span>
-        <span className="start-run-text">
-          <strong>Start a run</strong>
-          <span>{energyMeaning}</span>
-        </span>
-        <ChevronRight size={22} aria-hidden="true" />
-      </Link>
+      <RunSuggestion />
 
       <SyncBanner />
 
       {latest && <LatestRunCard run={latest} />}
 
       {recent.length > 0 && (
-        <section aria-labelledby="recent-title">
-          <div className="section-head">
-            <h2 id="recent-title">Recent runs</h2>
-            <Link to="/runs">See all</Link>
+        <section aria-label="Recent runs">
+          <div className="section-head icon-head">
+            <History size={20} aria-hidden="true" />
+            <Link to="/runs" className="icon-link" aria-label="See all runs">
+              <ArrowRight size={20} aria-hidden="true" />
+            </Link>
           </div>
           <div className="run-list">
             {recent.map((run) => (
@@ -88,53 +67,40 @@ function LatestRunCard({ run }: { run: Run }) {
 
   return (
     <article className="card" aria-label={label}>
-      <Link to={`/runs/${run.id}`} className="latest-title stretched">
-        <span className="latest-label">
-          {label} · {fmtDay(run.date)}
-        </span>
-        <span className="sr-only">, open summary</span>
-      </Link>
-      <div className="big-number" style={{ marginTop: 6 }}>
+      <div className="card-top">
+        <Link to={`/runs/${run.id}`} className="latest-label stretched">
+          <TimeOfDayIcon date={run.date} />
+          {fmtDay(run.date)}
+          <span className="sr-only">, {label}, open summary</span>
+        </Link>
+        <button
+          className={`round-btn above${sharing ? '' : ' primary'}`}
+          onClick={() => setSharing((s) => !s)}
+          aria-expanded={sharing}
+          aria-controls="home-share-panel"
+          aria-label={sharing ? 'Close sharing' : 'Share this run'}
+        >
+          {sharing ? <X size={20} aria-hidden="true" /> : <Share2 size={20} aria-hidden="true" />}
+        </button>
+      </div>
+      <div className="big-number">
         {fmtDistance(run.distanceMi, units)}
         <small>{units}</small>
       </div>
       <div className="stat-row">
-        <span>
-          <strong>{fmtDuration(run.durationSec)}</strong> time
+        <span className="icon-stat" aria-label={`Time ${fmtDuration(run.durationSec)}`}>
+          <MetricIcon metric="time" size={17} />
+          <strong>{fmtDuration(run.durationSec)}</strong>
         </span>
-        <span>
+        <span className="icon-stat" aria-label={`Pace ${fmtPace(run.paceSecPerMi, units)} ${paceUnit(units)}`}>
+          <MetricIcon metric="pace" size={17} />
           <strong>
             {fmtPace(run.paceSecPerMi, units)}
             {paceUnit(units)}
-          </strong>{' '}
-          pace
+          </strong>
         </span>
       </div>
-      <p className="insight">
-        <Sparkles size={18} aria-hidden="true" />
-        <span>{ins.headline}</span>
-      </p>
-      <div className="card-actions">
-        <Link to={`/runs/${run.id}`} className="btn btn-secondary btn-grow above">
-          See summary
-        </Link>
-        <button
-          className={`btn btn-grow above ${sharing ? 'btn-secondary' : 'btn-primary'}`}
-          onClick={() => setSharing((s) => !s)}
-          aria-expanded={sharing}
-          aria-controls="home-share-panel"
-        >
-          {sharing ? (
-            <>
-              <X size={18} aria-hidden="true" /> Close
-            </>
-          ) : (
-            <>
-              <Share2 size={18} aria-hidden="true" /> Share
-            </>
-          )}
-        </button>
-      </div>
+      <RunTrends deltas={ins.deltas} units={units} only={['pace', 'heartRate']} />
       {sharing && (
         <div ref={panelRef} id="home-share-panel" className="inline-share above" role="region" aria-label="Share your run">
           <SharePanel run={run} insight={ins.headline} onClose={() => setSharing(false)} />

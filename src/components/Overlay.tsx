@@ -1,5 +1,14 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+
+/**
+ * Overlays render into the phone frame itself, so a sheet opened from inside a
+ * card (which is position: relative) still covers the whole screen.
+ */
+function toDevice(node: ReactNode) {
+  return createPortal(node, document.querySelector('.device') ?? document.body);
+}
 
 /** Moves focus into the overlay, closes on Escape, and restores focus afterwards. */
 function useModal(onClose: () => void) {
@@ -22,7 +31,7 @@ function useModal(onClose: () => void) {
 export function BottomSheet({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
   const ref = useModal(onClose);
   const titleId = useId();
-  return (
+  return toDevice(
     <div className="overlay" onClick={onClose}>
       <div
         ref={ref}
@@ -42,7 +51,7 @@ export function BottomSheet({ title, onClose, children }: { title: string; onClo
         </div>
         {children}
       </div>
-    </div>
+    </div>,
   );
 }
 
@@ -61,7 +70,7 @@ export function ConfirmDialog({
 }) {
   const ref = useModal(onCancel);
   const titleId = useId();
-  return (
+  return toDevice(
     <div className="overlay center" onClick={onCancel}>
       <div
         ref={ref}
@@ -83,6 +92,6 @@ export function ConfirmDialog({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
   );
 }

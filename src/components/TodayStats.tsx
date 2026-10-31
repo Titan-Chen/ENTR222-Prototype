@@ -1,83 +1,94 @@
-import { useEffect, useState, type ReactNode } from 'react';
-import { Footprints, Gauge, HeartPulse, Info } from 'lucide-react';
-import { METRICS, type MetricKey } from '../data/metrics';
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import { METRICS } from '../data/metrics';
 import { dailyMeanings, dailyStats, stressWord } from '../lib/daily';
 import { useAppState } from '../state/AppState';
-import { ExplainerSheet } from './Metric';
+import { MetricIcon } from './Icons';
+import { DayChartSheet } from './DayChartSheet';
+import type { DayMetric } from '../lib/intraday';
 
 const REFRESH_MS = 5000;
+const SIZE = 68;
+const STROKE = 6;
+
+type Tone = 'heart' | 'steps' | 'good' | 'warn' | 'low';
 
 /**
- * Body Battery: a person with an energy bolt, so it reads as the body's energy
- * rather than the watch's charge. Drawn to match lucide's 24px, 2px-stroke style.
+ * Circular gauge: the ring fills toward a goal (steps) or a scale (Body Battery,
+ * stress out of 100), with the metric's icon in the middle.
  */
-function BodyEnergyIcon({ size = 24 }: { size?: number }) {
+function Ring({ pct, tone, beatBpm, children }: { pct: number; tone: Tone; beatBpm?: number; children: ReactNode }) {
+  const r = (SIZE - STROKE) / 2;
+  const c = 2 * Math.PI * r;
+  const fill = Math.min(100, Math.max(0, pct));
+  // Heart rate has no goal: the ring stays full and the icon beats at the live rate.
+  const beat = beatBpm ? ({ animationDuration: `${60 / beatBpm}s` } as CSSProperties) : undefined;
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="8" cy="4.5" r="2.5" />
-      <path d="M8 9v6" />
-      <path d="M4 12l4-3 4 3" />
-      <path d="M8 15l-3 6" />
-      <path d="M8 15l3 6" />
-      <path d="M19 3l-3.5 6.5h4L16 16" />
-    </svg>
-  );
-}
-
-function Tile({
-  metric,
-  icon,
-  tone,
-  value,
-  unit,
-  meaning,
-  extra,
-  onExplain,
-}: {
-  metric: MetricKey;
-  /** Shown instead of a text label; the name stays in the accessible label. */
-  icon: ReactNode;
-  tone: 'heart' | 'stress' | 'steps' | 'good' | 'warn' | 'low';
-  value: string;
-  unit?: string;
-  meaning: string;
-  extra?: ReactNode;
-  onExplain: (m: MetricKey) => void;
-}) {
-  const label = METRICS[metric].label('mi');
-  return (
-    <button
-      className="daily-tile"
-      onClick={() => onExplain(metric)}
-      aria-label={`${label}: ${value} ${unit ?? ''}. ${meaning}. Tap to learn what this means.`}
-    >
-      <span className={`daily-icon ${tone}`} title={label} aria-hidden="true">
-        {icon}
-        <Info size={13} className="daily-info" />
+    <span className={`ring ${tone}`} style={{ width: SIZE, height: SIZE }}>
+      <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} aria-hidden="true">
+        <circle className="ring-track" cx={SIZE / 2} cy={SIZE / 2} r={r} strokeWidth={STROKE} fill="none" />
+        <circle
+          className="ring-fill"
+          cx={SIZE / 2}
+          cy={SIZE / 2}
+          r={r}
+          strokeWidth={STROKE}
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={c}
+          strokeDashoffset={c * (1 - fill / 100)}
+          transform={`rotate(-90 ${SIZE / 2} ${SIZE / 2})`}
+        />
+      </svg>
+      <span className={`ring-icon${beatBpm ? ' beat' : ''}`} style={beat} aria-hidden="true">
+        {children}
       </span>
-      <span className="daily-value">
-        {value}
-        {unit && <small>{unit}</small>}
-      </span>
-      {extra}
-      <span className="metric-meaning">{meaning}</span>
-    </button>
-  );
-}
-
-function Bar({ pct, tone }: { pct: number; tone: 'accent' | 'good' | 'warn' | 'low' }) {
-  return (
-    <span className={`mini-bar ${tone}`} aria-hidden="true">
-      <span style={{ width: `${Math.min(100, Math.max(0, pct))}%` }} />
     </span>
   );
 }
 
-/** Glanceable all-day data from the watch, each with a plain-language meaning. */
+function RingTile({
+  metric,
+  tone,
+  pct,
+  beatBpm,
+  value,
+  unit,
+  meaning,
+  onExplain,
+}: {
+  metric: DayMetric;
+  tone: Tone;
+  pct: number;
+  beatBpm?: number;
+  value: string;
+  unit?: string;
+  meaning: string;
+  onExplain: (m: DayMetric) => void;
+}) {
+  const label = METRICS[metric].label('mi');
+  return (
+    <button
+      className="ring-tile"
+      onClick={() => onExplain(metric)}
+      title={label}
+      aria-label={`${label}: ${value} ${unit ?? ''}. ${meaning}. Tap to see today's chart.`}
+    >
+      <Ring pct={pct} tone={tone} beatBpm={beatBpm}>
+        <MetricIcon metric={metric} size={24} />
+      </Ring>
+      <span className="ring-value" aria-hidden="true">
+        {value}
+        {unit && <small>{unit}</small>}
+      </span>
+    </button>
+  );
+}
+
+/** Glanceable all-day data from the watch as four rings. Tap a ring for today's chart. */
 export function TodayStats() {
   const { runs } = useAppState();
   const [tick, setTick] = useState(0);
-  const [explain, setExplain] = useState<MetricKey | null>(null);
+  const [chart, setChart] = useState<DayMetric | null>(null);
 
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), REFRESH_MS);
@@ -90,40 +101,25 @@ export function TodayStats() {
   void tick;
 
   const battery = stats.bodyBattery;
-  const batteryTone = battery >= 50 ? 'good' : battery >= 25 ? 'warn' : 'low';
+  const batteryTone: Tone = battery >= 50 ? 'good' : battery >= 25 ? 'warn' : 'low';
+  const stressTone: Tone = stats.stress <= 50 ? 'good' : stats.stress <= 75 ? 'warn' : 'low';
+  const stepsPct = (stats.steps / stats.stepGoal) * 100;
+  const open = setChart;
 
   return (
-    <section aria-labelledby="today-title">
-      <div className="section-head">
-        <h2 id="today-title">Today</h2>
-        <span className="live-note">
-          <span className="live-dot" aria-hidden="true" /> From your watch
-        </span>
-      </div>
-      <div className="daily-grid">
-        <Tile metric="heartRateNow" icon={<HeartPulse size={24} />} tone="heart" value={String(stats.heartRate)} unit="bpm" meaning={meaning.heartRate} onExplain={setExplain} />
-        <Tile metric="stress" icon={<Gauge size={24} />} tone="stress" value={String(stats.stress)} unit={stressWord(stats.stress)} meaning={meaning.stress} onExplain={setExplain} />
-        <Tile
-          metric="steps"
-          icon={<Footprints size={24} />}
-          tone="steps"
-          value={stats.steps.toLocaleString()}
-          meaning={meaning.steps}
-          extra={<Bar pct={(stats.steps / stats.stepGoal) * 100} tone="accent" />}
-          onExplain={setExplain}
-        />
-        <Tile
-          metric="bodyBattery"
-          icon={<BodyEnergyIcon />}
-          tone={batteryTone}
-          value={String(battery)}
-          unit="/ 100"
-          meaning={meaning.bodyBattery}
-          extra={<Bar pct={battery} tone={batteryTone} />}
-          onExplain={setExplain}
-        />
-      </div>
-      {explain && <ExplainerSheet metric={explain} onClose={() => setExplain(null)} />}
+    <section className="card ring-row" aria-label="Today, from your watch">
+      <RingTile metric="heartRateNow" tone="heart" pct={100} beatBpm={stats.heartRate} value={String(stats.heartRate)} unit="bpm" meaning={meaning.heartRate} onExplain={open} />
+      <RingTile
+        metric="steps"
+        tone="steps"
+        pct={stepsPct}
+        value={stats.steps >= 10000 ? `${(stats.steps / 1000).toFixed(1)}k` : stats.steps.toLocaleString()}
+        meaning={`${stats.steps.toLocaleString()} of ${stats.stepGoal.toLocaleString()} steps. ${meaning.steps}`}
+        onExplain={open}
+      />
+      <RingTile metric="bodyBattery" tone={batteryTone} pct={battery} value={String(battery)} meaning={`${battery} of 100. ${meaning.bodyBattery}`} onExplain={open} />
+      <RingTile metric="stress" tone={stressTone} pct={stats.stress} value={String(stats.stress)} meaning={`${stressWord(stats.stress)}. ${meaning.stress}`} onExplain={open} />
+      {chart && <DayChartSheet metric={chart} stats={stats} runs={runs} onClose={() => setChart(null)} />}
     </section>
   );
 }

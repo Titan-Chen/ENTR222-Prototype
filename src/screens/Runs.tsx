@@ -33,12 +33,7 @@ export default function Runs() {
 
   return (
     <div className="stack">
-      <header className="page-header">
-        <h1>Your runs</h1>
-        <p className="subtle">
-          {runs.length} runs, newest first
-        </p>
-      </header>
+      <h1 className="sr-only">Your runs, newest first</h1>
 
       {!todaySynced && <PendingRunRow />}
 
@@ -55,7 +50,7 @@ export default function Runs() {
         </section>
       ))}
 
-      {runs.length === 0 && <p className="subtle">No runs yet. Your next run will show up here after it syncs.</p>}
+      {runs.length === 0 && <p className="subtle">No runs yet.</p>}
     </div>
   );
 }

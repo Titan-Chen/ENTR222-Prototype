@@ -83,9 +83,8 @@ function TabBar() {
   return (
     <nav className="tabbar" aria-label="Main">
       {tabs.map(({ to, label, icon: Icon, end }) => (
-        <NavLink key={to} to={to} end={end} className={({ isActive }) => (isActive ? 'active' : '')}>
-          <Icon size={24} aria-hidden="true" />
-          {label}
+        <NavLink key={to} to={to} end={end} className={({ isActive }) => (isActive ? 'active' : '')} aria-label={label} title={label}>
+          <Icon size={26} aria-hidden="true" />
         </NavLink>
       ))}
     </nav>
