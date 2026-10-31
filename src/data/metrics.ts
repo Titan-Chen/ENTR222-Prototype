@@ -1,6 +1,16 @@
 import type { Units } from '../lib/format';
 
-export type MetricKey = 'pace' | 'distance' | 'time' | 'heartRate' | 'cadence' | 'climb';
+export type MetricKey =
+  | 'pace'
+  | 'distance'
+  | 'time'
+  | 'heartRate'
+  | 'cadence'
+  | 'climb'
+  | 'heartRateNow'
+  | 'stress'
+  | 'steps'
+  | 'bodyBattery';
 
 interface MetricInfo {
   /** Everyday label shown on the first layer (PRD 3.3). */
@@ -48,5 +58,29 @@ export const METRICS: Record<MetricKey, MetricInfo> = {
     technical: 'Elevation gain',
     what: 'The total height you climbed during the run, adding up every uphill section.',
     why: 'Hills make a run harder, so a slower pace on a hilly route can be just as much work as a fast flat one.',
+  },
+  heartRateNow: {
+    label: () => 'Heart rate',
+    technical: 'Current heart rate (bpm)',
+    what: 'How many times your heart is beating each minute right now, measured by your watch.',
+    why: 'Sitting still, most adults are between 60 and 100. Lower resting numbers usually come with better fitness.',
+  },
+  stress: {
+    label: () => 'Stress',
+    technical: 'Stress level (0–100)',
+    what: 'An estimate of how much strain your body is under, based on small changes in the timing between heartbeats. 0–25 is resting, 26–50 low, 51–75 medium, 76–100 high.',
+    why: 'Stress isn’t only worry. Exercise, poor sleep, caffeine and illness raise it too. A calm stretch helps your body recover.',
+  },
+  steps: {
+    label: () => 'Steps',
+    technical: 'Steps',
+    what: 'How many steps you’ve taken today, counted by your watch. Runs count too.',
+    why: 'Moving throughout the day matters as much as workouts. Your daily goal adjusts to what’s realistic for you.',
+  },
+  bodyBattery: {
+    label: () => 'Body Battery',
+    technical: 'Body Battery',
+    what: 'How much energy your body has in reserve. It charges while you sleep and rest, and drains with activity and stress.',
+    why: 'It’s a quick way to decide what kind of day to have. A high number is a good time for a harder run; a low one means take it easy.',
   },
 };

@@ -381,9 +381,56 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .onboarding .subtle { margin-bottom: 22px; }
 .onboarding-foot { margin-top: auto; padding-top: 20px; }
 
+/* ---------- Today stats ---------- */
+
+.live-note { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-3); }
+.live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--good); animation: blink 2s ease-in-out infinite; }
+
+.daily-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.daily-tile {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+  padding: 10px 12px; text-align: left;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+}
+.daily-tile:hover { border-color: #3a4552; }
+.daily-icon { display: flex; align-items: center; gap: 6px; height: 26px; }
+.daily-icon .daily-info { color: var(--text-3); }
+.daily-icon.heart { color: #f87171; }
+.daily-icon.stress { color: #fb923c; }
+.daily-icon.steps { color: var(--accent); }
+.daily-icon.good { color: var(--good); }
+.daily-icon.warn { color: #fbbf24; }
+.daily-icon.low { color: var(--danger); }
+.daily-value { font-size: 22px; font-weight: 750; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.daily-value small { font-size: 13px; font-weight: 600; color: var(--text-2); margin-left: 4px; }
+.daily-tile .metric-meaning { font-size: 12.5px; }
+
+.mini-bar { display: block; width: 100%; height: 5px; margin: 3px 0 2px; border-radius: 3px; background: var(--border); overflow: hidden; }
+.mini-bar > span { display: block; height: 100%; border-radius: 3px; }
+.mini-bar.accent > span { background: var(--accent); }
+.mini-bar.good > span { background: var(--good); }
+.mini-bar.warn > span { background: #fbbf24; }
+.mini-bar.low > span { background: var(--danger); }
+
 /* ---------- Start a run / recording ---------- */
 
-.start-run { min-height: 56px; font-size: 17px; }
+/* Hero call to action: taller than other buttons, with room above and below. */
+.start-run {
+  display: flex; align-items: center; gap: 14px;
+  min-height: 80px; margin: 6px 0; padding: 14px 16px 14px 14px;
+  border-radius: 20px; background: var(--accent-strong); color: #fff;
+  box-shadow: 0 8px 24px rgba(10, 110, 189, 0.35);
+}
+.start-run:active { transform: scale(0.98); }
+.start-run-badge {
+  flex: none; display: grid; place-items: center;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: #fff; color: var(--accent-strong);
+}
+.start-run-badge svg { margin-left: 3px; }
+.start-run-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.start-run-text strong { font-size: 19px; font-weight: 750; }
+.start-run-text span { font-size: 14px; color: #fff; opacity: 0.92; }
 
 .record {
   flex: 1; display: flex; flex-direction: column;

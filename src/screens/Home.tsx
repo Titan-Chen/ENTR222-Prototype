@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Play, Share2, Sparkles, X } from 'lucide-react';
+import { ChevronRight, Play, Share2, Sparkles, X } from 'lucide-react';
+import { dailyMeanings, dailyStats } from '../lib/daily';
 import type { Run } from '../data/runs';
 import { fmtDay, fmtDistance, fmtDuration, fmtPace, paceUnit } from '../lib/format';
 import { insightsFor } from '../lib/insights';
@@ -8,6 +9,7 @@ import { useAppState, type Goal } from '../state/AppState';
 import { RunRow } from '../components/RunRow';
 import { SyncBanner } from '../components/SyncBanner';
 import { SharePanel } from '../components/ShareSheet';
+import { TodayStats } from '../components/TodayStats';
 
 const GOAL_LINE: Record<Goal, string> = {
   fitter: 'Let’s keep you moving',
@@ -28,6 +30,8 @@ export default function Home() {
   const { runs, goal } = useAppState();
   const latest = runs[0];
   const recent = runs.slice(1, 4);
+  // Guidance right where the decision to run is made (PRD 3.9).
+  const energyMeaning = dailyMeanings(dailyStats(runs)).bodyBattery;
 
   return (
     <div className="stack">
@@ -36,8 +40,17 @@ export default function Home() {
         <h1>{GOAL_LINE[goal]}</h1>
       </header>
 
-      <Link to="/record" className="btn btn-primary btn-block start-run">
-        <Play size={20} fill="currentColor" aria-hidden="true" /> Start a run
+      <TodayStats />
+
+      <Link to="/record" className="start-run">
+        <span className="start-run-badge" aria-hidden="true">
+          <Play size={24} fill="currentColor" />
+        </span>
+        <span className="start-run-text">
+          <strong>Start a run</strong>
+          <span>{energyMeaning}</span>
+        </span>
+        <ChevronRight size={22} aria-hidden="true" />
       </Link>
 
       <SyncBanner />
