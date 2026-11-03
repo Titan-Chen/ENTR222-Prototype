@@ -20,7 +20,12 @@ export interface DaySeries {
   yMax: number;
   /** Today's runs as [start, end] minutes, shaded on the chart. */
   runs: { start: number; end: number }[];
+  /** Last night's sleep as [start, end] minutes, lightly highlighted. */
+  sleep: { start: number; end: number } | null;
 }
+
+/** Simulated wake-up time; the readings above treat everything before it as sleep. */
+export const WAKE_MIN = 7 * 60;
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 
@@ -48,6 +53,7 @@ export function intraday(metric: DayMetric, runs: Run[], stats: DailyStats, now 
   const inRun = (m: number) => todays.some((r) => m >= r.start && m < r.end);
   const minsAfterRun = (m: number) => Math.min(...todays.filter((r) => m >= r.end).map((r) => m - r.end), Infinity);
   const runWindows = todays.map(({ start, end }) => ({ start, end }));
+  const sleep = nowMin > 0 ? { start: 0, end: Math.min(nowMin, WAKE_MIN) } : null;
 
   const sample = (step: number, f: (m: number, i: number) => number | null, last: number): DayPoint[] => {
     const pts: DayPoint[] = [];
@@ -71,7 +77,7 @@ export function intraday(metric: DayMetric, runs: Run[], stats: DailyStats, now 
         stats.heartRate,
       );
       const max = Math.max(...points.map((p) => p.v ?? 0));
-      return { kind: 'line', step: 10, points, yMin: 40, yMax: Math.max(120, niceCeil(max, 20)), runs: runWindows };
+      return { kind: 'line', step: 10, points, yMin: 40, yMax: Math.max(120, niceCeil(max, 20)), runs: runWindows, sleep };
     }
     case 'stress': {
       const points = sample(
@@ -85,7 +91,7 @@ export function intraday(metric: DayMetric, runs: Run[], stats: DailyStats, now 
         },
         stats.stress,
       );
-      return { kind: 'line', step: 15, points, yMin: 0, yMax: 100, runs: runWindows };
+      return { kind: 'line', step: 15, points, yMin: 0, yMax: 100, runs: runWindows, sleep };
     }
     case 'bodyBattery': {
       const points = sample(
@@ -102,7 +108,7 @@ export function intraday(metric: DayMetric, runs: Run[], stats: DailyStats, now 
         },
         stats.bodyBattery,
       );
-      return { kind: 'area', step: 15, points, yMin: 0, yMax: 100, runs: runWindows };
+      return { kind: 'area', step: 15, points, yMin: 0, yMax: 100, runs: runWindows, sleep };
     }
     case 'steps': {
       const hourNow = Math.floor(nowMin / 60);
@@ -118,7 +124,7 @@ export function intraday(metric: DayMetric, runs: Run[], stats: DailyStats, now 
       const total = raw.reduce((a, b) => a + b, 0) || 1;
       const points = raw.map((v, h) => ({ min: h * 60, v: Math.round((v / total) * stats.steps) }));
       const max = Math.max(...points.map((p) => p.v ?? 0));
-      return { kind: 'bars', step: 60, points, yMin: 0, yMax: Math.max(500, niceCeil(max, 500)), runs: runWindows };
+      return { kind: 'bars', step: 60, points, yMin: 0, yMax: Math.max(500, niceCeil(max, 500)), runs: runWindows, sleep };
     }
   }
 }

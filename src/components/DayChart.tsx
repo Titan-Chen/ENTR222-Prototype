@@ -1,4 +1,5 @@
 import { useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
+import { Moon } from 'lucide-react';
 import { fmtClock, type DaySeries } from '../lib/intraday';
 
 const W = 340;
@@ -76,6 +77,7 @@ export function DayChart({ series, color, unit, name }: { series: DaySeries; col
   const tipPoint = shown !== null ? points[shown] : null;
   const tipX = tipPoint ? x(kind === 'bars' ? tipPoint.min + series.step / 2 : tipPoint.min) : 0;
   const inRun = (min: number) => series.runs.some((r) => min >= r.start && min < r.end);
+  const inSleep = (min: number) => !!series.sleep && min >= series.sleep.start && min < series.sleep.end;
   const tipTime = tipPoint
     ? kind === 'bars'
       ? `${fmtClock(tipPoint.min)} – ${fmtClock(tipPoint.min + series.step)}`
@@ -109,6 +111,9 @@ export function DayChart({ series, color, unit, name }: { series: DaySeries; col
           onPointerLeave={() => setActive(null)}
           style={{ touchAction: 'pan-y' }}
         >
+          {series.sleep && (
+            <rect className="sleep-band" x={x(series.sleep.start)} y={PAD.t} width={x(series.sleep.end) - x(series.sleep.start)} height={PLOT_H} rx={2} />
+          )}
           {series.runs.map((r, i) => (
             <rect key={i} className="run-band" x={x(r.start)} y={PAD.t} width={Math.max(2, x(r.end) - x(r.start))} height={PLOT_H} rx={2} />
           ))}
@@ -149,13 +154,28 @@ export function DayChart({ series, color, unit, name }: { series: DaySeries; col
             </strong>
             <span>{tipTime}</span>
             {inRun(tipPoint.min) && <span className="chart-tip-run">Run</span>}
+            {inSleep(tipPoint.min) && (
+              <span className="chart-tip-run sleep">
+                <Moon size={11} aria-hidden="true" /> Sleep
+              </span>
+            )}
           </div>
         )}
       </div>
 
-      {series.runs.length > 0 && (
+      {(series.sleep || series.runs.length > 0) && (
         <div className="chart-legend" aria-hidden="true">
-          <span className="run-swatch" /> Run
+          {series.sleep && (
+            <span className="legend-item">
+              <span className="sleep-swatch" />
+              <Moon size={12} /> Sleep
+            </span>
+          )}
+          {series.runs.length > 0 && (
+            <span className="legend-item">
+              <span className="run-swatch" /> Run
+            </span>
+          )}
         </div>
       )}
 
